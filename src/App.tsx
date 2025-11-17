@@ -61,9 +61,21 @@ export default function App() {
       })
       .subscribe()
 
+    // subscribe to auth state changes so session is reactive (persists across reloads)
+    const { data: { subscription: authSub } = {} as any } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess)
+      if (sess?.user) {
+        void fetchSessionAndProfile()
+        void fetchProfiles()
+      } else {
+        setFirstName(null)
+      }
+    })
+
     return () => {
       void standingSub.unsubscribe()
       void profilesSub.unsubscribe()
+      if (authSub) void authSub.unsubscribe()
     }
   }, [])
 
