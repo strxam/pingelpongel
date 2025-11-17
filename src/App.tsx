@@ -143,27 +143,16 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
+    <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
       {!session && <Auth onAuth={() => void fetchSessionAndProfile()} />}
 
       {session?.user && !firstName && (
         <SetFirstName userId={session.user.id} onSet={name => setFirstName(name)} />
       )}
 
-      <h1 className="text-4xl font-bold mb-2 text-center text-white-800 mt-4">Leaderboard</h1>
+      <h2 className="font-bold mb-2 text-center text-white-800 mt-4">Leaderboard</h2>
 
       <div className="w-full max-w-2xl bg-white/5 rounded p-4 sm:p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            {session?.user && (
-              <>
-                <div className="text-sm text-gray-300">Signed in as</div>
-                <div className="font-semibold">{firstName || session.user.email?.split('@')[0]}</div>
-              </>
-            )}
-          </div>
-        </div>
-
         <div className="mb-6">
           <label className="block text-sm mb-2">Select loser</label>
           <CustomSelect
@@ -172,11 +161,11 @@ export default function App() {
             onChange={(v) => setSelectedLoser(v || null)}
             placeholder="choose loser"
           />
-          <div className="mt-3 flex gap-3">
+          <div className="mt-3 flex gap-3 flex-col">
             <button
               onClick={addWin}
               disabled={loading}
-              className="bg-green-500 text-white px-4 py-2 rounded"
+              className="bg-green-500 text-white px-4 py-2 rounded w-full"
             >
               {loading ? 'Adding...' : 'Add Win'}
             </button>
