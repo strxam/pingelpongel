@@ -146,7 +146,7 @@ export default function App() {
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
       <div className="flex flex-row gap-4 justify-center flex-wrap">
         <div className="add-order-btn max-w-2xl flex justify-center">
-          <a href="https://fredagskebab.netlify.app" target="_blank" rel="noopener noreferrer" className="">Fredagskebab</a>
+          <a href="https://fredagskebab.netlify.app" rel="noopener noreferrer" className="">Fredagskebab</a>
         </div>
         <div className="add-order-btn-active max-w-2xl flexjustify-center">
           <a href="#" rel="noopener noreferrer" className="">PingelPongel</a>
