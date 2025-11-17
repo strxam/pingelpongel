@@ -103,6 +103,9 @@ export default function App() {
     }
 
     return base.map((u, idx) => {
+      // If user has zero wins, always gray regardless of rank
+      if (u.wins === 0) return { ...u, tier: 'gray', tierColor: tierColors['gray'] }
+
       let tier = 'gray'
       if (idx === 0) tier = 'orange'
       else if (idx === 1) tier = 'purple'
@@ -125,9 +128,15 @@ export default function App() {
     setLoading(true)
     try {
       const payload = { created_by: session.user.id, loser_id: selectedLoser, created_at: new Date().toISOString() }
-      const { error } = await supabase.from('standing').insert([payload])
-      if (error) setError(error.message)
-      else setSelectedLoser(null)
+      // insert and return the created row so we can update UI immediately
+      const { data, error } = await supabase.from('standing').insert([payload]).select().single()
+      if (error) {
+        setError(error.message)
+      } else if (data) {
+        // prepend the new standing row to the local state so UI updates immediately
+        setStanding(prev => [data as StandingRow, ...prev])
+        setSelectedLoser(null)
+      }
     } finally {
       setLoading(false)
     }
