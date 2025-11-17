@@ -144,6 +144,14 @@ export default function App() {
 
   return (
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
+      <div className="flex flex-row gap-4 justify-center flex-wrap">
+        <div className="add-order-btn max-w-2xl flex justify-center">
+          <a href="https://fredagskebab.netlify.app" target="_blank" rel="noopener noreferrer" className="">Fredagskebab</a>
+        </div>
+        <div className="add-order-btn-active max-w-2xl flexjustify-center">
+          <a href="#" rel="noopener noreferrer" className="">PingelPongel</a>
+        </div>
+      </div>
       {!session && <Auth onAuth={() => void fetchSessionAndProfile()} />}
 
       {session?.user && !firstName && (
@@ -172,7 +180,7 @@ export default function App() {
             {error && <div className="text-red-400">{error}</div>}
           </div>
         </div>
-        
+
         <div>
           <h2 className="text-lg font-semibold mb-3">Standings</h2>
           <div className="overflow-x-auto">
@@ -189,9 +197,9 @@ export default function App() {
                 {userStats.map((u, idx) => (
                   <tr key={u.id} className="border-t border-white/5">
                     <td className="py-2 text-sm">{`${idx + 1}.`}</td>
-                        <td className="py-2">
-                          <span className="align-middle font-semibold" style={{ color: u.tierColor }}>{u.name}</span>
-                        </td>
+                    <td className="py-2">
+                      <span className="align-middle font-semibold" style={{ color: u.tierColor }}>{u.name}</span>
+                    </td>
                     <td className="py-2 text-center">{u.wins}</td>
                     <td className="py-2 text-center">{u.losses}</td>
                   </tr>
