@@ -10,7 +10,8 @@ export default function SetFirstName({
 }) {
   const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [exists, setExists] = useState(false)
+  // `exists` is null while we check the backend to avoid flashing the input briefly
+  const [exists, setExists] = useState<boolean | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   // Allow: digits, ASCII letters, Latin-1 supplement and Latin Extended-A (covers åäö and other western diacritics), and space
@@ -18,14 +19,19 @@ export default function SetFirstName({
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('first_name')
-        .eq('id', userId)
-        .single()
-      if (data?.first_name) setExists(true)
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', userId)
+          .single()
+        setExists(!!data?.first_name)
+      } catch (e) {
+        // on error, assume no name so user can set it; avoid leaving component in loading forever
+        setExists(false)
+      }
     }
-    fetchProfile()
+    void fetchProfile()
   }, [userId])
 
   const handleSave = async () => {
@@ -76,8 +82,9 @@ export default function SetFirstName({
     }
   }
 
+  // While we don't know if a name exists, avoid rendering the form to prevent a flash.
+  if (exists === null) return null
   if (exists) return null
-
   return (
     <div className="m-4 flex gap-2 flex-col items-center retro-font">
       <div className="flex flex-row gap 2">
@@ -100,7 +107,14 @@ export default function SetFirstName({
           disabled={loading}
           className="bg-blue-500 text-white px-4 py-2 rounded"
         >
-          Save
+          {loading ? (
+            <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+          ) : (
+            'Save'
+          )}
         </button>
       </div>
       {/* validation / backend error message */}
