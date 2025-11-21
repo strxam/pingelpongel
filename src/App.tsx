@@ -188,7 +188,7 @@ export default function App() {
       setLoading(false)
     }
   }
-
+  console.log(firstName);
   return (
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
       <ToastContainer />
@@ -201,25 +201,27 @@ export default function App() {
       <h2 className="font-bold mb-2 text-center text-white-800 mt-4">Leaderboard</h2>
 
       <div className="w-full max-w-2xl bg-white/5 rounded p-4 sm:p-6">
-        <div className="mb-6">
-          <label className="block text-sm mb-2">Select loser</label>
-          <CustomSelect
-            options={profiles.filter(p => p.id !== session?.user?.id).map(p => ({ value: p.id, label: p.first_name || p.id.slice(0, 6) }))}
-            value={selectedLoser ?? ''}
-            onChange={(v) => setSelectedLoser(v || null)}
-            placeholder="choose loser"
-          />
-          <div className="mt-3 flex gap-3 flex-col">
-            <button
-              onClick={addWin}
-              disabled={loading}
-              className="bg-green-500 text-white px-4 py-2 rounded w-full"
-            >
-              {loading ? 'Adding...' : 'Add Win'}
-            </button>
-            {error && <div className="text-red-400">{error}</div>}
+        {!(session?.user && !firstName) && (
+          <div className="mb-6">
+            <label className="block text-sm mb-2">Select loser</label>
+            <CustomSelect
+              options={profiles.filter(p => p.id !== session?.user?.id).map(p => ({ value: p.id, label: p.first_name || p.id.slice(0, 6) }))}
+              value={selectedLoser ?? ''}
+              onChange={(v) => setSelectedLoser(v || null)}
+              placeholder="choose loser"
+            />
+            <div className="mt-3 flex gap-3 flex-col">
+              <button
+                onClick={addWin}
+                disabled={loading}
+                className="bg-green-500 text-white px-4 py-2 rounded w-full"
+              >
+                {loading ? 'Adding...' : 'Add Win'}
+              </button>
+              {error && <div className="text-red-400">{error}</div>}
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
           <h2 className="text-lg font-semibold mb-3">Standings</h2>
