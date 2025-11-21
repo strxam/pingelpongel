@@ -4,6 +4,8 @@ import Auth from './Auth'
 import './App.css'
 import SetFirstName from './SetFirstName'
 import CustomSelect from './CustomSelect'
+import ToastContainer from './ToastContainer'
+import { showToast } from './toast'
 
 type Profile = { id: string; first_name?: string | null }
 type StandingRow = { id?: number; created_at?: string; loser_id: string | null; created_by: string }
@@ -49,8 +51,12 @@ export default function App() {
     const standingSub = supabase
       .channel('public:standing')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'standing' }, (payload) => {
-        const row = (payload as any).new as StandingRow
-        setStanding(prev => [row, ...prev])
+          const row = (payload as any).new as StandingRow
+          setStanding(prev => {
+            // avoid duplicates when we already optimistically added the row
+            if (row.id !== undefined && prev.some(r => r.id === row.id)) return prev
+            return [row, ...prev]
+          })
       })
       .subscribe()
 
@@ -80,8 +86,16 @@ export default function App() {
   }, [])
 
   const logout = async () => {
-    await supabase.auth.signOut()
-    window.location.reload()
+    try {
+      await supabase.auth.signOut()
+    } finally {
+      // clear session state without a hard reload so the app can re-render cleanly
+      setSession(null)
+      setFirstName(null)
+      setProfiles([])
+      setStanding([])
+      setSelectedLoser(null)
+    }
   }
 
   const userStats: UserWithTier[] = useMemo(() => {
@@ -163,8 +177,13 @@ export default function App() {
         setError(error.message)
       } else if (data) {
         // prepend the new standing row to the local state so UI updates immediately
-        setStanding(prev => [data as StandingRow, ...prev])
+        setStanding(prev => {
+          const row = data as StandingRow
+          if (row.id !== undefined && prev.some(r => r.id === row.id)) return prev
+          return [row, ...prev]
+        })
         setSelectedLoser(null)
+        showToast('Win recorded', 'success')
       }
     } finally {
       setLoading(false)
@@ -173,6 +192,7 @@ export default function App() {
 
   return (
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
+      <ToastContainer />
       {!session && <Auth onAuth={() => void fetchSessionAndProfile()} />}
 
       {session?.user && !firstName && (

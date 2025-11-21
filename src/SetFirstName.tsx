@@ -45,11 +45,8 @@ export default function SetFirstName({
 
     // Get current session to verify auth
     const { data: { session } } = await supabase.auth.getSession()
-    console.log('Current user ID:', session?.user?.id)
-    console.log('Provided user ID:', userId)
 
     if (session?.user?.id !== userId) {
-      console.error('Session user ID does not match provided user ID')
       setError('Authentication mismatch. Please sign out and sign in again.')
       setLoading(false)
       return
@@ -81,7 +78,6 @@ export default function SetFirstName({
 
   if (exists) return null
 
-  console.log(error);
   return (
     <div className="m-4 flex gap-2 flex-col items-center retro-font">
       <div className="flex flex-row gap 2">

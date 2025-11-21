@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from './lib/supabaseClient'
+import { showToast } from './toast'
 
 export default function Auth({ onAuth }: { onAuth: (user: any) => void }) {
   const [email, setEmail] = useState('')
@@ -29,6 +30,7 @@ export default function Auth({ onAuth }: { onAuth: (user: any) => void }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) return setError(error.message)
       onAuth(data.user)
+      showToast('Signed in successfully', 'success')
     } finally {
       setLoading(false)
     }
