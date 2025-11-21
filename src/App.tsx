@@ -92,8 +92,7 @@ export default function App() {
       // clear session state without a hard reload so the app can re-render cleanly
       setSession(null)
       setFirstName(null)
-      setProfiles([])
-      setStanding([])
+      // keep `profiles` and `standing` so the leaderboard remains visible to signed-out users
       setSelectedLoser(null)
     }
   }
