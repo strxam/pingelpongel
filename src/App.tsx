@@ -131,6 +131,23 @@ export default function App() {
     })
   }, [profiles, standing])
 
+  // compute head-to-head diff (auth wins minus entrant wins) for each opponent
+  const headToHeadDiffs: Record<string, number> = useMemo(() => {
+    const diffs: Record<string, number> = {}
+    const authId = session?.user?.id
+    if (!authId) return diffs
+    for (const s of standing) {
+      if (!s.loser_id) continue
+      if (s.created_by === authId) {
+        diffs[s.loser_id] = (diffs[s.loser_id] || 0) + 1
+      } else if (s.loser_id === authId) {
+        // someone beat the auth user
+        diffs[s.created_by] = (diffs[s.created_by] || 0) - 1
+      }
+    }
+    return diffs
+  }, [standing, session])
+
   const addWin = async () => {
     setError(null)
     if (!session?.user) return setError('You must be signed in to add wins')
@@ -211,6 +228,11 @@ export default function App() {
                     <td className="py-2 text-sm">{`${idx + 1}.`}</td>
                     <td className="py-2">
                       <span className="align-middle font-semibold" style={{ color: u.tierColor }}>{u.name}</span>
+                      {session?.user && session.user.id !== u.id && (() => {
+                        const diff = headToHeadDiffs[u.id] ?? 0
+                        const cls = diff > 0 ? 'text-green-400' : diff < 0 ? 'text-red-400' : 'text-gray-400'
+                        return <span className={`ml-2 text-sm ${cls}`}>{`(${diff > 0 ? '+' : ''}${diff})`}</span>
+                      })()}
                     </td>
                     <td className="py-2 text-center">{u.wins}</td>
                     <td className="py-2 text-center">{u.losses}</td>
