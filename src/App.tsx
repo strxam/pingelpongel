@@ -20,6 +20,7 @@ export default function App() {
   const [selectedLoser, setSelectedLoser] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedYear, setSelectedYear] = useState<string | null>(null)
 
   const fetchSessionAndProfile = async () => {
     const { data } = await supabase.auth.getSession()
@@ -98,12 +99,37 @@ export default function App() {
   }
 
   const userStats: UserWithTier[] = useMemo(() => {
+    // Extract unique years from standing data and sort descending
+    const yearsSet = new Set<string>()
+    standing.forEach(s => {
+      if (s.created_at) {
+        const year = new Date(s.created_at).getFullYear().toString()
+        yearsSet.add(year)
+      }
+    })
+    const years = Array.from(yearsSet).sort().reverse()
+    
+    // Set selectedYear to current year if not already set and years are available
+    if (!selectedYear && years.length > 0 && !selectedYear) {
+      const currentYear = new Date().getFullYear().toString()
+      if (years.includes(currentYear)) {
+        setSelectedYear(currentYear)
+      }
+    }
+
+    // Filter standing based on selected year
+    const filteredStanding = !selectedYear ? standing : standing.filter(s => {
+      if (!s.created_at) return false
+      const year = new Date(s.created_at).getFullYear().toString()
+      return year === selectedYear
+    })
+
     const map = new Map<string, UserStats>()
     profiles.forEach(p => {
       const name = p.first_name || p.id.slice(0, 6)
       map.set(p.id, { id: p.id, name, wins: 0, losses: 0 })
     })
-    standing.forEach(s => {
+    filteredStanding.forEach(s => {
       const winner = s.created_by
       const loser = s.loser_id
       if (!map.has(winner)) map.set(winner, { id: winner, name: winner.slice(0, 6), wins: 0, losses: 0 })
@@ -142,14 +168,22 @@ export default function App() {
       }
       return { ...u, tier, tierColor: tierColors[tier] }
     })
-  }, [profiles, standing])
+  }, [profiles, standing, selectedYear])
 
   // compute head-to-head diff (auth wins minus entrant wins) for each opponent
   const headToHeadDiffs: Record<string, number> = useMemo(() => {
     const diffs: Record<string, number> = {}
     const authId = session?.user?.id
     if (!authId) return diffs
-    for (const s of standing) {
+    
+    // Filter standing based on selected year for head-to-head calculation
+    const filteredStanding = !selectedYear ? standing : standing.filter(s => {
+      if (!s.created_at) return false
+      const year = new Date(s.created_at).getFullYear().toString()
+      return year === selectedYear
+    })
+    
+    for (const s of filteredStanding) {
       if (!s.loser_id) continue
       if (s.created_by === authId) {
         diffs[s.loser_id] = (diffs[s.loser_id] || 0) + 1
@@ -159,7 +193,7 @@ export default function App() {
       }
     }
     return diffs
-  }, [standing, session])
+  }, [standing, session, selectedYear])
 
   const addWin = async () => {
     setError(null)
@@ -188,7 +222,7 @@ export default function App() {
       setLoading(false)
     }
   }
-  console.log(firstName);
+  
   return (
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
       <ToastContainer />
@@ -224,6 +258,24 @@ export default function App() {
         )}
 
         <div>
+          <div className="mb-4 flex items-center gap-3">
+            <label className="text-sm">Filter by year:</label>
+            <select
+              value={selectedYear ?? 'all-time'}
+              onChange={(e) => setSelectedYear(e.target.value === 'all-time' ? null : e.target.value)}
+              className="bg-white/10 text-white px-3 py-2 rounded text-sm border border-white/20"
+            >
+              <option value="all-time">All Time</option>
+              {standing
+                .filter(s => s.created_at)
+                .map(s => new Date(s.created_at!).getFullYear())
+                .filter((year, idx, arr) => arr.indexOf(year) === idx)
+                .sort((a, b) => b - a)
+                .map(year => (
+                  <option key={year} value={year.toString()}>{year}</option>
+                ))}
+            </select>
+          </div>
           <h2 className="text-lg font-semibold mb-3">Standings</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-left table-auto text-sm sm:text-base">
