@@ -98,25 +98,25 @@ export default function App() {
     }
   }
 
-  const userStats: UserWithTier[] = useMemo(() => {
-    // Extract unique years from standing data and sort descending
-    const yearsSet = new Set<string>()
-    standing.forEach(s => {
-      if (s.created_at) {
-        const year = new Date(s.created_at).getFullYear().toString()
-        yearsSet.add(year)
-      }
-    })
-    const years = Array.from(yearsSet).sort().reverse()
-    
-    // Set selectedYear to current year if not already set and years are available
-    if (!selectedYear && years.length > 0 && !selectedYear) {
+  // Initialize selectedYear to current year on first render
+  useEffect(() => {
+    if (!selectedYear && standing.length > 0) {
+      const yearsSet = new Set<string>()
+      standing.forEach(s => {
+        if (s.created_at) {
+          const year = new Date(s.created_at).getFullYear().toString()
+          yearsSet.add(year)
+        }
+      })
+      const years = Array.from(yearsSet).sort().reverse()
       const currentYear = new Date().getFullYear().toString()
       if (years.includes(currentYear)) {
         setSelectedYear(currentYear)
       }
     }
+  }, [standing.length])
 
+  const userStats: UserWithTier[] = useMemo(() => {
     // Filter standing based on selected year
     const filteredStanding = !selectedYear ? standing : standing.filter(s => {
       if (!s.created_at) return false
@@ -222,7 +222,7 @@ export default function App() {
       setLoading(false)
     }
   }
-  
+
   return (
     <div className="app-shell flex flex-col items-center justify-start pt-8 pb-12 px-4 md:px-12 gap-6 retro-font">
       <ToastContainer />
@@ -283,8 +283,9 @@ export default function App() {
                 <tr className="text-sm text-gray-400">
                   <th className="pb-2">#</th>
                   <th className="pb-2">Player</th>
-                  <th className="pb-2 text-center">Wins</th>
-                  <th className="pb-2 text-center">Losses</th>
+                  <th className="pb-2 text-center hidden sm:table-cell">Wins</th>
+                  <th className="pb-2 text-center hidden sm:table-cell">Losses</th>
+                  <th className="pb-2 text-center sm:hidden">W/L</th>
                 </tr>
               </thead>
               <tbody>
@@ -299,8 +300,9 @@ export default function App() {
                         return <span className={`ml-2 text-sm ${cls}`}>{`(${diff > 0 ? '+' : ''}${diff})`}</span>
                       })()}
                     </td>
-                    <td className="py-2 text-center">{u.wins}</td>
-                    <td className="py-2 text-center">{u.losses}</td>
+                    <td className="py-2 text-center hidden sm:table-cell">{u.wins}</td>
+                    <td className="py-2 text-center hidden sm:table-cell">{u.losses}</td>
+                    <td className="py-2 text-center sm:hidden">{u.wins}-{u.losses}</td>
                   </tr>
                 ))}
               </tbody>
